@@ -74,6 +74,11 @@ pub fn build(b: *std.build.Builder) void {
         "-DLUA_USE_MKSTEMP",
     });
 
+    const linenoize = b.addStaticLibrary("linenoise", "deps/linenoize/src/c.zig");
+    linenoize.setTarget(target);
+    linenoize.setBuildMode(mode);
+    linenoize.linkLibC();
+
     const redis_cli = b.addExecutable("redis-cli", null);
     redis_cli.setTarget(target);
     redis_cli.setBuildMode(mode);
@@ -81,8 +86,9 @@ pub fn build(b: *std.build.Builder) void {
     redis_cli.linkLibC();
     redis_cli.linkLibrary(hiredis);
     redis_cli.addIncludeDir("deps/hiredis");
-    redis_cli.addIncludeDir("deps/linenoise");
+    redis_cli.addIncludeDir("deps/linenoize/include");
     redis_cli.addIncludeDir("deps/lua/src");
+    redis_cli.linkLibrary(linenoize);
     redis_cli.addCSourceFiles(&.{
         "src/adlist.c",
         "src/ae.c",
@@ -98,7 +104,6 @@ pub fn build(b: *std.build.Builder) void {
         "src/release.c",
         "src/siphash.c",
         "src/zmalloc.c",
-        "deps/linenoise/linenoise.c",
     }, &.{
         "-std=c11",
         "-pedantic",
